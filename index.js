@@ -2,17 +2,11 @@ var fs = require('fs')
 var path = require('path')
 
 var _ = require('lodash')
+var envPaths = require('env-paths')
 var home = require('os-homedir')
-
-var configPath = path.join(home(), '.greenkeeperrc')
+var mkdirp = require('mkdirp')
 
 var config
-
-try {
-  config = JSON.parse(fs.readFileSync(configPath))
-} catch (e) {
-  config = {}
-}
 
 exports.get = function (name) {
   return name
@@ -41,5 +35,28 @@ exports.merge = function (newConfig) {
 }
 
 exports._save = function () {
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+  fs.writeFileSync(exports.getPath(), JSON.stringify(config, null, 2))
+}
+
+exports.getPath = _.memoize(function () {
+  var configDir = envPaths('greenkeeper', {suffix: ''}).config
+  mkdirp.sync(configDir)
+  return path.join(configDir, '.greenkeeperrc')
+})
+
+var readConfig = _.flow(fs.readFileSync, JSON.parse)
+try {
+  // If config exists at the old path use and migrate it
+  var oldPath = path.join(home(), '.greenkeeperrc')
+  config = readConfig(oldPath)
+  exports._save()
+  fs.unlinkSync(oldPath)
+} catch (e) {
+  try {
+    // Use XDG environment variable and fallback to OS default
+    config = readConfig(exports.getPath())
+  } catch (e) {
+    // No prior config
+    config = {}
+  }
 }
