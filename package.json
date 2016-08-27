@@ -6,6 +6,7 @@
     "url": "https://github.com/greenkeeperio/rc/issues"
   },
   "dependencies": {
+    "env-paths": "^0.3.0",
     "lodash": "^4.11.1",
     "os-homedir": "^1.0.1"
   },

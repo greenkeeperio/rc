@@ -2,11 +2,23 @@ var fs = require('fs')
 var path = require('path')
 
 var _ = require('lodash')
+var envPaths = require('env-paths')
 var home = require('os-homedir')
 
-var configPath = path.join(home(), '.greenkeeperrc')
-
 var config
+
+var getConfigDir = function () {
+  // If configuration exists in the old default path use it
+  try {
+    fs.accessSync(path.join(home(), '.greenkeeperrc'))
+    return home()
+  } catch (err) {
+    // Use XDG environment variable and fallback to OS default
+    return envPaths('', {suffix: ''}).config
+  }
+}
+
+var configPath = path.join(getConfigDir(), '.greenkeeperrc')
 
 try {
   config = JSON.parse(fs.readFileSync(configPath))
