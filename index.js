@@ -2,25 +2,19 @@ var fs = require('fs')
 var path = require('path')
 
 var _ = require('lodash')
+var envPaths = require('env-paths')
 var home = require('os-homedir')
 
 var config
 
-var configDirs = {
-  'linux': path.join(home(), '.config'),
-  'darwin': path.join(home(), 'Library', 'Preferences'),
-  'win32': path.join(home(), 'AppData', 'Roaming'),
-  'default': home()
-}
-
 var getConfigDir = function () {
   // If configuration exists in the old default path use it
   try {
-    fs.accessSync(path.join(configDirs.default, '.greenkeeperrc'))
-    return configDirs.default
+    fs.accessSync(path.join(home(), '.greenkeeperrc'))
+    return home()
   } catch (err) {
     // Use XDG environment variable and fallback to OS default
-    return process.env.XDG_CONFIG_HOME || configDirs[process.platform]
+    return envPaths('', {suffix: ''}).config
   }
 }
 
